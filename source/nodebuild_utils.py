@@ -1,33 +1,66 @@
-def label_constructor(labels, label_values):
-    assert len(labels) == len(label_values)
-    assert type(labels) == tuple
-    assert type(label_values) == tuple
+def property_constructor(property_keys, property_values):
+    """ Builds a property string for Neo4j queries in the form {}"""
 
-    label = "{"
+    assert len(property_keys) == len(property_values)
+    assert type(property_keys) == tuple
+    assert type(property_values) == tuple
 
-    for i in range(0, len(labels)):
+    property = "{"
+
+    for i in range(0, len(property_keys)):
         ## add more functionality for different data types
-        if type(label_values[i]) == int or type(label_values[i]) == float:
-            value = str(label_values[i])
+        if type(property_values[i]) == int or type(property_values[i]) == float:
+            value = str(property_values[i])
         else:
-            value = "'" + str(label_values[i]) + "'"
-        if i == len(labels) - 1:
-            label = label + str(labels[i]) + ":" + value
+            value = "'" + str(property_values[i]) + "'"
+        if i == len(property_keys) - 1:
+            property = property + str(property_keys[i]) + ":" + value
         else:
-            label = label + str(labels[i]) + ":" + value + ', '
+            property = property + str(property_keys[i]) + ":" + value + ', '
 
-    label = label + "}"
+    property = property + "}"
+    return property
+
+
+def label_constructor(labels):
+    assert type(labels) == tuple
+    assert len(labels) > 0
+    label = ""
+    for l in labels:
+        label = label + ":" + str(l)
     return label
 
 
-def node_constructor(node_type, labels=(), label_values=()):
-    label = label_constructor(labels, label_values)
-    return "(__name__:{} {})".format(node_type, label)
+def node_constructor(node_labels=(), property_keys=(), property_values=()):
+    if len(property_keys) > 0:
+        property = property_constructor(property_keys, property_values)
+    else:
+        property = ""
+
+    if node_labels == ():
+        return "(__name__ {})".format(property)
+    else:
+        labels = label_constructor(node_labels)
+        return "(__name__:{} {})".format(labels, property)
 
 
-def edge_constructor(edge_type, labels=(), label_values=()):
-    label = label_constructor(labels, label_values)
-    return "[__name__:{} {}]".format(edge_type, label)
+def type_constructor(edge_type):
+    assert type(edge_type) == str
+    assert ":" not in edge_type
+    return ":" + edge_type
+
+
+def edge_constructor(edge_type=(), property_keys=(), property_values=()):
+    if len(edge_type) == 1:
+        type = type_constructor(edge_type)
+    else:
+        raise AssertionError("Only one edge type can be specified")
+
+    if len(property_keys) > 0:
+        property = property_constructor(property_keys, property_values)
+    else:
+        property = ""
+    return "[__name__{} {}]".format(type, property)
 
 
 def build_node(tx, node):
@@ -46,3 +79,7 @@ def build_relation(tx, n1, n2, e):
 def build_bi_relation(tx, n1, n2, e1, e2):
     build_relation(tx, n1, n2, e1)
     build_relation(tx, n2, n1, e2)
+
+
+def return_build_function():
+    return build_node
