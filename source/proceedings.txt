@@ -1,0 +1,15 @@
+LOAD CSV WITH HEADERS FROM
+'file:///proceeding_papers.csv' AS line FIELDTERMINATOR ';'
+WITH line LIMIT 1500
+MERGE (corr_author: Author {name:line.corresponding})
+MERGE (paper:Paper {ID: ToInteger(line.inproceedings), title: coalesce(line.title,""), keywords:coalesce(split(line.keywords,'|'), ""), abstract:coalesce(line.abstract,""), pages:coalesce(line.pages,""),last_modification:coalesce(date(line.inprocmdate),""), DOI: coalesce(line.inprocee, "")})
+MERGE (corr_author)-[:Writes {main_author:True}]->(paper)
+FOREACH (auth in split(line.co_authors,'|')| MERGE (author:Author {name: auth}) MERGE ((author)-[r:Writes {main_author:False}]->(paper)))
+FOREACH (cit in SPLIT(line.citations, '|') | MERGE (paper2: Paper{ID: ToInteger(cit)}) MERGE
+(paper)-[:Cites]->(paper2))
+FOREACH (rev in SPLIT(line.reviewed_by, '|') | MERGE (author2:Author {name: rev}) MERGE
+((author2)-[:Reviews]->(paper)))
+MERGE (proceeding: Proceeding {ID: ToInteger(line.proceedings), title: coalesce(line.booktitle, ""), ISBN: coalesce(line.isbn,""), publisher: coalesce(line.publisher,""), volume: coalesce(line.volume, "")})
+MERGE (proceeding)-[:Contains]->(paper)
+MERGE (conference:Conference {name:line.booktitle,series:coalesce(line.series,""), date:coalesce(line.procmdate, ""), location:coalesce(line.location, "")})
+MERGE (conference)-[:Publishes]->(proceeding)
