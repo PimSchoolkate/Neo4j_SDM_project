@@ -1,2 +1,0 @@
-;mastersthesis:ID;author:string;ee:string[];ee-type:string;key:string;mdate:date;note:string;note-type:string;school:string;title:string;year:int
-2;588;Kurt P. Brown;;;ms/Brown92;2018-06-13;;;University of Wisconsin-Madison;PRPL: A Database Workload Specification Language, v1.3.;1992
