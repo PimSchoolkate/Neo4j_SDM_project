@@ -1,0 +1,4 @@
+CREATE CONSTRAINT ON (c:Conference) ASSERT (c.name, c.date) IS NODE KEY;
+CREATE CONSTRAINT ON (c:Journal) ASSERT (c.name, c.year) IS NODE KEY;
+CREATE CONSTRAINT ON (c:Article) ASSERT c.ID IS UNIQUE;
+CREATE CONSTRAINT ON (c:Author) ASSERT c.name is UNIQUE;
