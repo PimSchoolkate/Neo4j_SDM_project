@@ -1,0 +1,4 @@
+LOAD CSV WITH HEADERS FROM 'file:///C:/Users/Pim/Documents/GitHub/Neo4j_SDM_project/data/evolving/authors.csv' AS line FIELDTERMINATOR ';'
+With line
+match (a:Author {name: line.name})
+set a.affiliation = line.affiliation

@@ -1,0 +1,12 @@
+match (paper:Paper) - [ryes:Review {decision: "yes"}] - ()
+with paper, count(ryes) as ryes
+match (paper) - [r:Review] - ()
+with paper, r, ryes, count(r) as tot, toFloat(ryes)/toFloat(count(r)) as res
+with paper, ryes, count(r) as tot, toFloat(ryes)/toFloat(count(r)) as res,
+case
+when count(r) = 0 THEN "NoReview"
+when toFloat(ryes)/toFloat(count(r)) > 0.5 THEN "Accepted"
+when toFloat(ryes)/toFloat(count(r)) < 0.5 THEN "NotAccepted"
+else "Accepted"
+end as decision
+set paper.decision = decision
