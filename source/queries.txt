@@ -1,0 +1,9 @@
+TOP PAPERS:
+ 
+MATCH (:Paper)-[:Cites]->(pa:Paper)<-[:Publishes]-(co:Conference)
+WITH co, pa, count(*) as cites
+ORDER BY co, cites DESC
+WITH co, collect([pa,cites]) as papers
+RETURN co.name as conference_name, co.date as conference_date, papers[0][0].title as paper1, papers[0][1] as num_cites1,
+       papers[1][0].title as paper2, papers[1][1] as num_cites2,
+       papers[2][0].title as paper3, papers[2][1] as num_cites3

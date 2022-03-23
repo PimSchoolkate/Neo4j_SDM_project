@@ -9,7 +9,5 @@ FOREACH (cit in SPLIT(line.citations, '|') | MERGE (paper2: Paper{ID: ToInteger(
 (paper)-[:Cites]->(paper2))
 FOREACH (rev in SPLIT(line.reviewed_by, '|') | MERGE (author2:Author {name: rev}) MERGE
 ((author2)-[:Reviews]->(paper)))
-MERGE (proceeding: Proceeding {ID: ToInteger(line.proceedings), title: coalesce(line.booktitle, ""), ISBN: coalesce(line.isbn,""), publisher: coalesce(line.publisher,""), volume: coalesce(line.volume, "")})
-MERGE (proceeding)-[:Contains]->(paper)
 MERGE (conference:Conference {name:line.booktitle,series:coalesce(line.series,""), date:coalesce(line.procmdate, ""), location:coalesce(line.location, "")})
-MERGE (conference)-[:Publishes]->(proceeding)
+MERGE (conference)-[:Publishes {book_title:coalesce(line.booktitle, ""), ISBN: coalesce(line.isbn,""), publisher: coalesce(line.publisher,""), volume: coalesce(line.volume, "")}]->(paper)
