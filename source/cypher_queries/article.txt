@@ -1,8 +1,5 @@
-LOAD CSV WITH HEADERS FROM
-'file:///article.csv' AS line FIELDTERMINATOR ';'
-WITH line LIMIT 1500
-MERGE (paper:Paper {ID: ToInteger(line.article), title: coalesce(line.title,""), keywords:coalesce(split(line.keywords,'|'), ""), abstract:coalesce(line.abstract,""), pages:coalesce(line.pages,""),last_modification:coalesce(date(line.mdate),""), DOI: coalesce(line.ee, "") })
-MERGE (journal:Journal {name: line.journal, volume: coalesce(ToInteger(line.volume), ""), year: ToInteger(line.year)})
+MERGE (paper:Paper {ID: ToInteger(line.article), title: coalesce(line.title,''), keywords:coalesce(split(line.keywords,'|'), ''), abstract:coalesce(line.abstract,''), pages:coalesce(line.pages,''),last_modification:coalesce(date(line.mdate),''), DOI: coalesce(line.ee, '') })
+MERGE (journal:Journal {name: line.journal, volume: coalesce(ToInteger(line.volume), ''), year: ToInteger(line.year)})
 MERGE  ((journal)-[r:Publishes]->(paper))
 MERGE (corr_author: Author {name:line.corresponding})
 FOREACH (auth in split(line.co_authors,'|')| MERGE (author:Author {name: auth}) MERGE ((author)-[r:Writes {main_author:False}]->(paper)))

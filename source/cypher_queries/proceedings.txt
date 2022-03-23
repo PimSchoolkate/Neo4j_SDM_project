@@ -1,9 +1,6 @@
-LOAD CSV WITH HEADERS FROM
-'file:///proceeding_papers.csv' AS line FIELDTERMINATOR ';'
 WITH line WHERE line.inproceedings IS NOT NULL
 WITH line WHERE line.corresponding IS NOT NULL
 WITH line WHERE line.booktitle IS NOT NULL
-WITH line LIMIT 10000
 MERGE (corr_author: Author {name:coalesce(line.corresponding, "")})
 MERGE (paper:Paper {ID: ToInteger(line.inproceedings), title: coalesce(line.title,""), keywords:coalesce(split(line.keywords,'|'), ""), abstract:coalesce(line.abstract,""), pages:coalesce(line.pages,""),last_modification:coalesce(date(line.inprocmdate),""), DOI: coalesce(line.inprocee, "")})
 MERGE (corr_author)-[:Writes {main_author:True}]->(paper)
