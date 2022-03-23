@@ -9,9 +9,9 @@ def get_parser():
     parser.add_argument("-l", "--limit",
                         help="Amount of lines read of the csv",
                         type=int, default=-1)
-    #parser.add_argument("-b", "--batches",
-    #                    help="If data needs to be loaded in batches, and if so how many batches per iteration",
-    #                    type=int, default=-1)
+    parser.add_argument("-c", "--constraints",
+                       help="Determine if constraints should be added, this only needs to be done once, default 'y'",
+                       type=str, choices=['y', 'n'], default="y")
     parser.add_argument("-d", "--driver_url",
                         help="URL of the neo4j database",
                         type=str, default="neo4j://localhost:7687",)
@@ -29,7 +29,7 @@ def get_file_url(url):
 
 
 def get_query_header(url, limit):
-    return "LOAD CSV WITH HEADERS FROM {} AS line FIELDTERMINATOR ';' WITH line LIMIT {}".format(url, limit)
+    return "LOAD CSV WITH HEADERS FROM {} AS line FIELDTERMINATOR ';' WITH line LIMIT {} ".format(url, limit)
 
 
 def get_driver(d_url, username, password):
@@ -37,7 +37,11 @@ def get_driver(d_url, username, password):
 
 
 def detect_file(url):
-    file = url.split('/')[-1]
+    if '/' in url:
+        file = url.split('/')[-1]
+    else:
+        file = url.split("\\")[-1]
+
     if file == 'article.csv':
         return 'article'
     elif file == 'proceeding_papers.csv':
@@ -47,15 +51,21 @@ def detect_file(url):
 
 
 def article_query():
-    with open('article.txt', 'r') as file:
+    with open('cypher_queries/article.txt', 'r') as file:
         article = file.read()
     return article
 
 
 def proceedings_query():
-    with open('proceedings.txt', 'r') as file:
+    with open('cypher_queries/proceedings.txt', 'r') as file:
         proceedings = file.read()
     return proceedings
+
+
+def get_constraints():
+    with open('cypher_queries/constraints.txt', 'r') as file:
+        constraints = file.read()
+    return constraints
 
 
 def transaction_function(tx, query):
@@ -71,6 +81,16 @@ def run_query(url, d_url, username, password, limit):
     file_url = get_file_url(url)
     driver = get_driver(d_url, username, password)
     header = get_query_header(file_url, limit)
+
+    # load in the constraints if needed
+    if args.constraints == 'y':
+        c_query = get_constraints()
+        queries = c_query.split('\n')
+        with driver.session() as session:
+            for q in queries:
+                session.write_transaction(transaction_function, q)
+        print("Constraints loaded correctly")
+
     if file_name == 'article':
         query = article_query()
     elif file_name == 'proceedings':
@@ -82,9 +102,17 @@ def run_query(url, d_url, username, password, limit):
 
     with driver.session() as session:
         session.write_transaction(transaction_function, query)
+    driver.close()
+
+    print('{}.csv loaded correctly in the graph'.format(file_name))
+    print("_"*110)
 
 
 if __name__ == "__main__":
+    print('_'*110)
+    print("Please make sure that within the settings of the database "
+          "'dbms.directories.import=import', is commented out")
+    print('')
     parser = get_parser()
     args = parser.parse_args()
 
