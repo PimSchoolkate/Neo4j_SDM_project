@@ -20,10 +20,6 @@ def get_parser():
 
 def read_and_sample(input_path, random_state = 1, fraction = 0.01):
     list_of_files = os.listdir(input_path)
-    if fraction*5 > 1:
-                    fraction2 = fraction
-    else:
-        fraction2 = fraction*5
     for file in list_of_files:
         file_path = os.path.join(input_path, file)
         if 'header' in file:
@@ -42,36 +38,61 @@ def read_and_sample(input_path, random_state = 1, fraction = 0.01):
                         inproceedings_data = inproceedings_data[[c for c in inproceedings_data if inproceedings_data[c].isna().sum() < 0.95*inproceedings_data.shape[0]]]
                 elif 'proceedings' in file:
                         print('Reading Proceeding Data.')
+                        if fraction < 0.20:
+                                fraction2 = fraction*5
+                        else:
+                                fraction2=fraction
                         data = data.sample(frac = fraction2, random_state = random_state)
                         proceedings_data = data
                         proceedings_data = proceedings_data[['proceedings:ID', 'booktitle:string','ee:string[]', 'isbn:string[]'
-                                                ,'mdate:date', 'publisher:string[]', 'series:string[]', 'volume:string']]
+                                                ,'mdate:date', 'publisher:string[]', 'series:string[]', 'volume:string', 'title:string']]
         elif file == 'dblp_author.csv':
                 print('Reading Author Data.')
                 author_data = pd.read_csv(file_path, sep = ';', header=0, low_memory=False)
 
     return(author_data, article_data, proceedings_data, inproceedings_data)
 
-def create_keywords(df):
+def create_keywords_art(df):
         key_words = []
         db_key_words = ['data management', 'indexing', 'data modeling', 'big data', 'data processing', 'data storage', 'data querying']
+        db_journals = ['Autom. Control. Comput. Sci.', 'IEEE Trans. Control. Syst. Technol.', 'CoRR', 'Manag. Sci.']
         it = 0
+        sep = '|'
         for key, value in df['title:string'].iteritems():
                 it += 1
+                choices = []
                 try:
                         possible_keywords = value.split()
-
-                        sep = '|'
-                        if it == 5:
-                                key_words.append(sep.join(random.sample(db_key_words, 3)))
-                                it = 0
-                        elif len(possible_keywords) <= 3:
-                                key_words.append(sep.join(possible_keywords))
-                        else:
-                                key_words.append(sep.join(random.sample(possible_keywords, 3)))
+                        if len(possible_keywords) <= 3:
+                                choices.extend(possible_keywords) 
+                        elif df['journal:string'].iloc[it] in db_journals and (random.randint(0,20) < 19):
+                                choices.extend(random.sample(db_key_words, 1))
+                        choices.extend(random.sample(possible_keywords, 3))
+                        key_words.append(sep.join(choices))
                 except:
                         key_words.append(value)
         df["keywords"] = key_words
+        return df
+
+def create_keywords_proc(df):
+        db_key_words = ['data management', 'indexing', 'data modeling', 'big data', 'data processing', 'data storage', 'data querying']
+        db_conferences = ['MFCS', 'WSC', 'ICNC (1)', 'GECCO (Companion)']
+        proc_key = {}
+        keyw_list = []
+        it = 0
+        sep = '|'
+        for key, inproceedings in df['inproceedings'].iteritems():
+                it += 1
+                keywords = []
+                if it < 280 and (random.randint(0,20) < 19):
+                        keywords.extend(lorem.words(2).split())
+                        keywords.extend(random.sample(db_key_words,2))
+                        proc_key[inproceedings] = sep.join(keywords)
+                else:
+                        proc_key[inproceedings] = sep.join(lorem.words(3).split())
+        for key, value in df['inproceedings'].iteritems():
+                keyw_list.append(proc_key[value])
+        df['keywords'] = keyw_list
         return df
 
 def create_abstract(df):
@@ -118,7 +139,7 @@ def create_citations(article_df, proceeding_df):
                 citations_for_art.append(sep.join(citation_list))
         for key, value in proceeding_df['inproceedings:ID'].iteritems():
                 citation_list = []
-                amount = random.randint(0,15)
+                amount = random.randint(0,35)
                 for citation in range(amount):
                         book_or_article = random.randint(0,1)
                         if book_or_article == 0:
@@ -240,12 +261,11 @@ def remove_format_spec(df):
 def preprocess_pipeline(input_path, output_path, fraction):
     random_state = 1
     print("------------------------------------------------")
-    print("Looking for unprocessed files:")
+    print("Looking for unprocessed files...")
     author_data, article_data, proceedings_data, inproceedings_data = read_and_sample(input_path = input_path, random_state=random_state, fraction = fraction)
     print("------------------------------------------------")
     print("unprocessed data read into data frames.")
-    article_data = create_keywords(article_data)
-    inproceedings_data = create_keywords(inproceedings_data)
+    article_data = create_keywords_art(article_data)
     article_data = create_abstract(article_data)
     inproceedings_data = create_abstract(inproceedings_data)
     print("------------------------------------------------")
@@ -263,6 +283,7 @@ def preprocess_pipeline(input_path, output_path, fraction):
     article_data = remove_format_spec(article_data)
     paper_proceedings_data = remove_format_spec(paper_proceedings_data)
     paper_proceedings_data = create_location_dict(paper_proceedings_data)
+    paper_proceedings_data = create_keywords_proc(paper_proceedings_data)
     print("------------------------------------------------")
     print("Writing to output:")
     article_data.to_csv(os.path.join(output_path, 'article.csv'), sep = ';', index=None)
