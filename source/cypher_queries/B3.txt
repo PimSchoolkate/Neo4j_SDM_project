@@ -1,0 +1,10 @@
+MATCH (jo:Journal)-[]-(pa:Paper)<-[ci:Cites]-()
+WITH jo.name AS name ,jo.year AS year, ToFloat(COUNT(ci)) AS citations
+CALL {
+    WITH name, year
+    MATCH (jo2:Journal {name: name})-[pu:Publishes]-()
+    WHERE jo2.year IN [year-2, year-1]
+    RETURN ToFloat(COUNT(pu)) AS prior_publications
+}
+RETURN name, year, CASE prior_publications WHEN 0 THEN 0 ELSE (citations/prior_publications) END AS impact_factor
+ORDER BY impact_factor DESC

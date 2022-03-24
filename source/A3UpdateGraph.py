@@ -1,7 +1,4 @@
 import os
-import pandas as pd
-import random
-import math
 import argparse
 from neo4j import GraphDatabase
 

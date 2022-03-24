@@ -1,0 +1,7 @@
+WITH pa, co, count(*) as cites
+ORDER BY co, cites DESC
+WITH co, collect([pa,cites]) as papers
+RETURN co.name as conference, co.date as date, coalesce(papers[0][0].title,"") as first_paper, 
+coalesce(papers[0][1],"") as times_cited_1, coalesce(papers[1][0].title,"") as second_paper, 
+coalesce(papers[1][1],"") as times_cited_2, coalesce(papers[2][0].title, "") as third_paper, 
+coalesce(papers[2][1], "") as times_cited_3

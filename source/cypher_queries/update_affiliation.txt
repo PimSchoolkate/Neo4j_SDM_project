@@ -2,4 +2,3 @@ match (a:Author {name: line.name})
 with a, line
 merge (af:Affiliation {name: line.affiliation})
 merge (a) - [:Affiliated_with] - (af)
-return a, af
