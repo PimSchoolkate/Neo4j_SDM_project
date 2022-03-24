@@ -1,3 +1,4 @@
+MATCH ()-[:Cites]->(pa:Paper)-[:Publishes]-(co:Conference)
 WITH pa, co, count(*) as cites
 ORDER BY co, cites DESC
 WITH co, collect([pa,cites]) as papers

@@ -3,7 +3,6 @@ step one: define a new node for the similarity called commonAuthor.
 match (c:Conference) - [:Publishes] -> (p:Paper) <- [:Writes] - (a:Author) - [:Writes] -> (p2:Paper) <- [:Publishes] - (c2:Conference) where c.name <> c2.name and c <> c2
 with c, c2, a
 merge (c) - [:connects] -> (ca:CommonAuthor {name: a.name}) <- [:connects] - (c2)
-return c, ca, c2
 
 step 2: build a gds graph with the conference and the newly defined commonauthor
 
