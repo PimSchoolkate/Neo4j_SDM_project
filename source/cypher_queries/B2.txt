@@ -1,0 +1,4 @@
+MATCH (co:Conference)-[:Publishes]->(:Paper)<-[:Writes]-(au:Author)
+WITH co.name as conference, au.name as author, count(distinct co.date) as conferences_contrib
+WHERE conferences_contrib > 3
+RETURN conference, collect(author) as community

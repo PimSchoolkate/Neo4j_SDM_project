@@ -1,0 +1,5 @@
+MATCH (au:Author)-[wr:Writes]->(pa1:Paper)<-[ci:Cites]-(pa2:Paper)
+WITH au, wr, pa1, COUNT(ci) as times_cited
+WITH times_cited, au.name as author, COUNT(wr) as amount_published
+RETURN author, (CASE WHEN amount_published <= times_cited THEN amount_published ELSE times_cited END) as h_index
+ORDER BY h_index DESC
