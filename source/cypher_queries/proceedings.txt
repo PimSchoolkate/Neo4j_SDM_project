@@ -1,16 +1,14 @@
 WITH line WHERE line.inproceedings IS NOT NULL
 WITH line WHERE line.corresponding IS NOT NULL
 WITH line WHERE line.booktitle IS NOT NULL
-WITH line LIMIT 100
 MERGE (corr_author: Author {name:coalesce(line.corresponding, "")})
-MERGE (paper:Paper {ID: ToInteger(line.inproceedings), title: coalesce(line.title,""), abstract:coalesce(line.abstract,""), pages:coalesce(line.pages,""),last_modification:coalesce(date(line.inprocmdate),""), DOI: coalesce(line.inprocee, "")})
+MERGE (paper:Paper {ID: ToInteger(line.inproceedings), title: coalesce(line.title,""), abstract:coalesce(line.abstract,""), pages:coalesce(line.pages,""),last_modification:coalesce(date(line.inprocmdate),""), DOI: coalesce(line.inprocee, ""), keywords: coalesce(SPLIT(line.keywords, '|'),"")})
 MERGE (corr_author)-[:Writes {main_author:True}]->(paper)
 FOREACH (auth in split(line.co_authors,'|')| MERGE (author:Author {name: auth}) MERGE ((author)-[r:Writes {main_author:False}]->(paper)))
 FOREACH (cit in SPLIT(line.citations, '|') | MERGE (paper2: Paper{ID: ToInteger(cit)}) MERGE
-(paper)-[:Cites]->(paper2))
+(paper2)-[:Cites]->(paper))
 FOREACH (rev in SPLIT(line.reviewed_by, '|') | MERGE (author2:Author {name: rev}) MERGE
 ((author2)-[:Reviews]->(paper)))
 MERGE (conference:Conference {name:line.booktitle,series:coalesce(line.series,""), date:coalesce(line.procmdate, ""), location:coalesce(line.location, "")})
 MERGE (conference)-[:Publishes {book_title:coalesce(line.booktitle, ""), ISBN: coalesce(line.isbn,""), publisher: coalesce(line.publisher,""), volume: coalesce(line.volume, "")}]->(paper)
-FOREACH (keyword in SPLIT(line.keywords, '|') | MERGE (keyw: Keyword {ID: keyword}) MERGE
-(paper)-[:About]->(keyw))
+
