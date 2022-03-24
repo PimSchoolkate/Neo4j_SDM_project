@@ -1,7 +1,6 @@
 WITH line WHERE line.inproceedings IS NOT NULL
 WITH line WHERE line.corresponding IS NOT NULL
 WITH line WHERE line.booktitle IS NOT NULL
-WITH line LIMIT 100
 MERGE (corr_author: Author {name:coalesce(line.corresponding, "")})
 MERGE (paper:Paper {ID: ToInteger(line.inproceedings), title: coalesce(line.title,""), abstract:coalesce(line.abstract,""), pages:coalesce(line.pages,""),last_modification:coalesce(date(line.inprocmdate),""), DOI: coalesce(line.inprocee, "")})
 MERGE (corr_author)-[:Writes {main_author:True}]->(paper)

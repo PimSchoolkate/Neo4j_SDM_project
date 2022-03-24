@@ -114,7 +114,7 @@ def run_query(file_url, file_name, d_url, username, password, limit):
         session.write_transaction(transaction_function, query)
     driver.close()
 
-    print('{}.csv loaded correctly in the graph'.format(file_name))
+    print('{} loaded correctly in the graph'.format(file_name))
     print("_"*110)
 
 
