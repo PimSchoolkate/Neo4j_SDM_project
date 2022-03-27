@@ -1,0 +1,16 @@
+match (a:Author) - [] -() - [] - (a2:Author)
+where a <> a2
+with a, a2
+merge (a) - [:knows] -(a2)||CALL gds.graph.create(
+    'C2',
+    'Author',
+    {
+        knows: {
+            orientation: 'UNDIRECTED'
+        }
+    }
+)||CALL gds.louvain.stream('C2')
+YIELD nodeId, communityId, intermediateCommunityIds
+RETURN gds.util.asNode(nodeId).name AS name, communityId, intermediateCommunityIds
+ORDER BY name ASC||CALL gds.louvain.stats('C2')
+YIELD communityCount||CALL gds.graph.drop('C2')||match () - [k:knows] - () delete k

@@ -5,9 +5,9 @@ from neo4j import GraphDatabase
 def get_parser():
     p = argparse.ArgumentParser()
     p.add_argument("-q", "--query",
-                   help="define which query has to be executed. By default",
+                   help="define which query has to be executed. By default B1",
                    choices=['B1', "B2", "B3", "B4"],
-                   default="/data/evolving/authors.csv",
+                   default="B1",
                    type=str)
     p.add_argument("-d", "--driver_url",
                    help="URL of the neo4j database",

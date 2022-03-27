@@ -1,0 +1,14 @@
+match (c:Conference) - [:Publishes] -> (p:Paper) <- [:Writes] - (a:Author) - [:Writes] -> (p2:Paper) <- [:Publishes] - (c2:Conference) where c.name <> c2.name and c <> c2
+with c, c2, a
+merge (c) - [:connects] -> (ca:CommonAuthor {name: a.name}) <- [:connects] - (c2)||CALL gds.graph.create(
+    'C1',
+    ['Conference', 'CommonAuthor'],
+    {
+        connects: {
+            type: 'connects'
+        }
+    }
+);||CALL gds.nodeSimilarity.stream('C1')
+YIELD node1, node2, similarity
+RETURN gds.util.asNode(node1).name AS Conference1, gds.util.asNode(node2).name AS Conference2, similarity
+ORDER BY similarity DESCENDING, Conference1, Conference2||Match (c:CommonAuthor) detach delete c||CALL gds.graph.drop("C1")

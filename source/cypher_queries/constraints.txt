@@ -2,3 +2,4 @@ CREATE CONSTRAINT ON (c:Conference) ASSERT (c.name, c.date) IS NODE KEY;
 CREATE CONSTRAINT ON (c:Journal) ASSERT (c.name, c.year, c.volume) IS NODE KEY;
 CREATE CONSTRAINT ON (c:Article) ASSERT c.ID IS UNIQUE;
 CREATE CONSTRAINT ON (c:Author) ASSERT c.name is UNIQUE;
+CREATE CONSTRAINT ON (c:Community) ASSERT (c.name) IS NODE KEY;
